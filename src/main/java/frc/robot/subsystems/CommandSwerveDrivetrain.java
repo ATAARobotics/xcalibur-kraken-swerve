@@ -153,48 +153,48 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         }
 
         try {
-            // double[] pose = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose_wpiblue")
-            //         .getDoubleArray(new double[6]);
-            // double poseX = pose[0];
-            // double poseY = pose[1];
-            // Rotation2d poseR = Rotation2d.fromDegrees(pose[5]);
-            // double timeStamp = Timer.getFPGATimestamp() - (pose[6] / 1000.0);
-            // SmartDashboard.putBoolean("Limelight Status", true);
-            // Pose2d visionBotPose = new Pose2d(poseX, poseY, poseR);
+            double[] pose = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose_wpiblue")
+                    .getDoubleArray(new double[6]);
+            double poseX = pose[0];
+            double poseY = pose[1];
+            Rotation2d poseR = Rotation2d.fromDegrees(pose[5]);
+            double timeStamp = Timer.getFPGATimestamp() - (pose[6] / 1000.0);
+            SmartDashboard.putBoolean("Limelight Status", true);
+            Pose2d visionBotPose = new Pose2d(poseX, poseY, poseR);
 
-            // // distance from current pose to vision estimated pose
-            // double poseDifference = this.getPose().getTranslation().getDistance(visionBotPose.getTranslation());
+            // distance from current pose to vision estimated pose
+            double poseDifference = this.getPose().getTranslation().getDistance(visionBotPose.getTranslation());
 
-            // if (Math.abs(pose[0]) >= 0.1) {
-            //     double xyStds;
-            //     double degStds;
-            //     // multiple targets detected
-            //     if (pose[7] >= 2) {
-            //         if (!DriverStation.isEnabled()) {
-            //             this.getPigeon2().setYaw(poseR.getDegrees());
-            //         }
-            //         xyStds = 0.5;
-            //         degStds = 6;
-            //     }
-            //     // 1 target with large area and close to estimated pose
-            //     else if (pose[9] > 0.8 && poseDifference < 0.5) {
-            //         xyStds = 1.0;
-            //         degStds = 12;
-            //     }
-            //     // 1 target farther away and estimated pose is close
-            //     else if (pose[9] > 0.1 && poseDifference < 0.3) {
-            //         xyStds = 2.0;
-            //         degStds = 30;
-            //     }
-            //     // conditions don't match to add a vision measurement
-            //     else {
-            //         return;
-            //     }
+            if (Math.abs(pose[0]) >= 0.001) {
+                double xyStds;
+                double degStds;
+                // multiple targets detected
+                if (pose[7] >= 2) {
+                    if (!DriverStation.isEnabled()) {
+                        this.getPigeon2().setYaw(poseR.getDegrees());
+                    }
+                    xyStds = 0.5;
+                    degStds = 6;
+                }
+                // 1 target with large area and close to estimated pose
+                else if (pose[9] > 0.8 && poseDifference < 0.5) {
+                    xyStds = 1.0;
+                    degStds = 12;
+                }
+                // 1 target farther away and estimated pose is close
+                else if (pose[9] > 0.1 && poseDifference < 0.3) {
+                    xyStds = 2.0;
+                    degStds = 30;
+                }
+                // conditions don't match to add a vision measurement
+                else {
+                    return;
+                }
 
-            //     this.addVisionMeasurement(visionBotPose, timeStamp,
-            //             VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds)));
-            //     this.addVisionMeasurement(visionBotPose, timeStamp);
-            // }
+                this.addVisionMeasurement(visionBotPose, timeStamp,
+                        VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds)));
+                this.addVisionMeasurement(visionBotPose, timeStamp);
+            }
         } catch (Exception e) {
             DriverStation.reportError("LIMELIGHT FAIL: RESTART ROBOT CODE", e.getStackTrace());
             SmartDashboard.putBoolean("Limelight Status", false);
