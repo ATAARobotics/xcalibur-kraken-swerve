@@ -91,7 +91,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         );
     }
 
-    private Pose2d getPose() {
+    public Pose2d getPose() {
         return this.getState().Pose;
     }
 

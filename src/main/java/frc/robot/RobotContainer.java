@@ -9,6 +9,7 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.DriveRequestType;
 
+import java.lang.Math;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -39,11 +40,16 @@ public class RobotContainer {
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
   private void configureBindings() {
+    double rightX = joystick.getRightX() * Math.PI;
+    double rightY = joystick.getRightY() * Math.PI;
+    double angle = Math.atan2(rightY, rightX);
+    drivetrain.setDefaultCommand(drivetrain.applyRequest(()->drive.)))
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with
                                                                                            // negative Y (forward)
             .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
             .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+            //
         ));
 
     joystick.a().whileTrue(drivetrain.applyRequest(() -> brake));
@@ -60,6 +66,8 @@ public class RobotContainer {
   }
 
   public RobotContainer() {
+    drivetrain.seedFieldRelative(drivetrain.getPose());
+
     configureBindings();
     autoChooser = AutoBuilder.buildAutoChooser();
     SmartDashboard.putData("Auto Chooser", autoChooser);
