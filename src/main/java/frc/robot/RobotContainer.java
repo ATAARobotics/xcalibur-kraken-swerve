@@ -19,12 +19,13 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.AbsoluteRotation;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class RobotContainer {
   private final SendableChooser<Command> autoChooser;
-  private double MaxSpeed = TunerConstants.kSpeedAt12VoltsMps; // kSpeedAt12VoltsMps desired top speed
-  private double MaxAngularRate = 3 * Math.PI; // 3/4 of a rotation per second max angular velocity
+  private double MaxSpeed = Constants.MaxSpeed;
+  private double MaxAngularRate = Constants.MaxAngularSpeed;
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController joystick = new CommandXboxController(0); // My joystick
@@ -39,16 +40,15 @@ public class RobotContainer {
 
   private final Telemetry logger = new Telemetry(MaxSpeed);
 
+  private AbsoluteRotation m_AbsoluteRotation = new AbsoluteRotation(() -> joystick.getRightX(), () -> joystick.getRightY(), () -> drivetrain.getPose().getRotation().getRadians());;
+
   private void configureBindings() {
-    double rightX = joystick.getRightX() * Math.PI;
-    double rightY = joystick.getRightY() * Math.PI;
-    double angle = Math.atan2(rightY, rightX);
-    drivetrain.setDefaultCommand(drivetrain.applyRequest(()->drive.)))
+
     drivetrain.setDefaultCommand( // Drivetrain will execute this command periodically
         drivetrain.applyRequest(() -> drive.withVelocityX(-joystick.getLeftY() * MaxSpeed) // Drive forward with
                                                                                            // negative Y (forward)
             .withVelocityY(-joystick.getLeftX() * MaxSpeed) // Drive left with negative X (left)
-            .withRotationalRate(-joystick.getRightX() * MaxAngularRate) // Drive counterclockwise with negative X (left)
+            .withRotationalRate(m_AbsoluteRotation.rotationSpeed()) // Drive counterclockwise with negative X (left)
             //
         ));
 
