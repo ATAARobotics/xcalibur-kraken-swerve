@@ -31,7 +31,7 @@ public class AbsoluteRotation extends SubsystemBase{
         this.joyRightY = joyRightY;
         this.robotAngle = robotAngle;
 
-        SmartDashboard.putNumber("rotP", 0);
+        SmartDashboard.putNumber("rotP", 4);
         SmartDashboard.putNumber("rotI", 0);
         SmartDashboard.putNumber("rotD", 0);
 
@@ -45,11 +45,11 @@ public class AbsoluteRotation extends SubsystemBase{
         rotI = SmartDashboard.getNumber("rotI", 0);
         rotD = SmartDashboard.getNumber("rotD", 0);
         
-        System.out.println(rotP);
+        // System.out.println(rotP);
 
         controller.setPID(rotP, rotI, rotD);
 
-        joyAngle = Math.atan2(joyRightY.getAsDouble(), joyRightX.getAsDouble());
+        joyAngle = Math.atan2(-joyRightY.getAsDouble(), joyRightX.getAsDouble());
         robAngle = robotAngle.getAsDouble();
 
         controller.enableContinuousInput(-Math.PI, Math.PI);
@@ -69,8 +69,11 @@ public class AbsoluteRotation extends SubsystemBase{
         // rotSpeed = MathUtil.clamp(controller.calculate(robAngle), Constants.lowBound, Constants.MaxAngularSpeed);
         rotSpeed = controller.calculate(robAngle);
 
+        if(Math.sqrt(joyRightY.getAsDouble()*joyRightY.getAsDouble() + joyRightX.getAsDouble()*joyRightX.getAsDouble())<0.2) {
+            rotSpeed=0;
+        }
 
-        System.out.println(rotSpeed);
+        // System.out.println(rotSpeed);
 
     }
 

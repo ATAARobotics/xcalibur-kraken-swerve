@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest;
 import com.pathplanner.lib.auto.AutoBuilder;
@@ -14,11 +15,17 @@ import com.pathplanner.lib.util.ReplanningConfig;
 
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.PoseEstimator;
+import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StringPublisher;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -27,12 +34,15 @@ import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Subsystem;
+import frc.robot.Constants;
+import frc.robot.generated.TunerConstants;
 
 /**
  * Class that extends the Phoenix SwerveDrivetrain class and implements
  * subsystem so it can be used in command-based projects easily.
  */
 public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsystem {
+
     private static final double kSimLoopPeriod = 0.005; // 5 ms
     private Notifier m_simNotifier = null;
     private double m_lastSimTime;
@@ -44,6 +54,15 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean hasAppliedOperatorPerspective = false;
 
+    private SwerveDrivePoseEstimator PoseEstimator;
+
+
+    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
+
+    private final NetworkTable table = inst.getTable("Pose");
+    private final DoubleArrayPublisher fieldPub = table.getDoubleArrayTopic("robotPose").publish();
+    private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
+
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency,
             SwerveModuleConstants... modules) {
         super(driveTrainConstants, OdometryUpdateFrequency, modules);
@@ -51,6 +70,13 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             startSimThread();
         }
         setPathPlanner();
+
+        PoseEstimator = new SwerveDrivePoseEstimator(
+            Constants.swerveKinematics,
+            this.getPigeon2().getRotation2d(),
+            TunerConstants.mSwerveModulePositions,
+            new Pose2d(new Translation2d(0, 0), new Rotation2d(0))
+        );
     }
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
@@ -59,6 +85,14 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             startSimThread();
         }
         setPathPlanner();
+
+        PoseEstimator = new SwerveDrivePoseEstimator(
+            Constants.swerveKinematics,
+            this.getPigeon2().getRotation2d(),
+            TunerConstants.mSwerveModulePositions,
+            new Pose2d(new Translation2d(0, 0), new Rotation2d(0))
+        );
+
     }
 
     private void setPathPlanner() {
@@ -92,7 +126,11 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     public Pose2d getPose() {
-        return this.getState().Pose;
+        return this.PoseEstimator.getEstimatedPosition();
+    }
+
+    public SwerveDrivePoseEstimator getPoseEstimator() {
+        return PoseEstimator;
     }
 
     private ChassisSpeeds getSpeeds() {
@@ -152,56 +190,70 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             });
         }
 
-        // try {
-        //     double[] pose = NetworkTableInstance.getDefault().getTable("limelight").getEntry("botpose_wpiblue")
-        //             .getDoubleArray(new double[6]);
-        //     double poseX = pose[0];
-        //     double poseY = pose[1];
-        //     Rotation2d poseR = Rotation2d.fromDegrees(pose[5]);
-        //     double timeStamp = Timer.getFPGATimestamp() - (pose[6] / 1000.0);
-        //     SmartDashboard.putBoolean("Limelight Status", true);
-        //     Pose2d visionBotPose = new Pose2d(poseX, poseY, poseR);
+        try {
+            NetworkTable pose = NetworkTableInstance.getDefault().getTable("POSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSs");
+            double poseX = pose.getEntry("POSSSSSX").getDouble(0);
+            double poseY = pose.getEntry("POSSSSSY").getDouble(0);
+            Rotation2d poseR = Rotation2d.fromRadians(pose.getEntry("ROTTTTTY").getDouble(0));
+            double timeStamp = pose.getEntry("LATENSEEEEE").getDouble(0) / (1000000000); // one bil nano -> sec
+            SmartDashboard.putBoolean("Limelight Status", true);
+            Pose2d visionBotPose = new Pose2d(poseX, poseY, poseR);
 
-        //     // distance from current pose to vision estimated pose
-        //     double poseDifference = this.getPose().getTranslation().getDistance(visionBotPose.getTranslation());
+            // distance from current pose to vision estimated pose
+            // double poseDifference = this.getPose().getTranslation().getDistance(visionBotPose.getTranslation());
 
-        //     if (Math.abs(pose[0]) >= 0.001) {
-        //         double xyStds;
-        //         double degStds;
-        //         // multiple targets detected
-        //         if (pose[7] >= 2) {
-        //             if (!DriverStation.isEnabled()) {
-        //                 this.getPigeon2().setYaw(poseR.getDegrees());
-        //             }
-        //             xyStds = 0.5;
-        //             degStds = 6;
-        //         }
-        //         // 1 target with large area and close to estimated pose
-        //         else if (pose[9] > 0.8 && poseDifference < 0.5) {
-        //             xyStds = 1.0;
-        //             degStds = 12;
-        //         }
-        //         // 1 target farther away and estimated pose is close
-        //         else if (pose[9] > 0.1 && poseDifference < 0.3) {
-        //             xyStds = 2.0;
-        //             degStds = 30;
-        //         }
-        //         // conditions don't match to add a vision measurement
-        //         else {
-        //             return;
-        //         }
+            if (Math.abs(poseX) >= 0.001) {
+                // double xyStds;
+                // double degStds;
+                // multiple targets detected
+                // if (pose.getEntry() >= 2) {
+                //     if (!DriverStation.isEnabled()) {
+                //         this.getPigeon2().setYaw(poseR.getDegrees());
+                //     }
+                //     xyStds = 0.5;
+                //     degStds = 6;
+                // }
+                // // 1 target with large area and close to estimated pose
+                // else if (pose[9] > 0.8 && poseDifference < 0.5) {
+                //     xyStds = 1.0;
+                //     degStds = 12;
+                // }
+                // // 1 target farther away and estimated pose is close
+                // else if (pose[9] > 0.1 && poseDifference < 0.3) {
+                //     xyStds = 2.0;
+                //     degStds = 30;
+                // }
+                // // conditions don't match to add a vision measurement
+                // else {
+                //     return;
+                // }
 
-        //         this.addVisionMeasurement(visionBotPose, timeStamp,
-        //                 VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds)));
-        //         this.addVisionMeasurement(visionBotPose, timeStamp);
-        //     }
-        // } catch (Exception e) {
-        //     DriverStation.reportError("LIMELIGHT FAIL: RESTART ROBOT CODE", e.getStackTrace());
-        //     SmartDashboard.putBoolean("Limelight Status", false);
-        // }
+                // this.addVisionMeasurement(visionBotPose, timeStamp
+                //         // , VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds))
+                //         );
+                PoseEstimator.update(this.getPigeon2().getRotation2d(), TunerConstants.mSwerveModulePositions);
+                PoseEstimator.addVisionMeasurement(visionBotPose, Timer.getFPGATimestamp());
+                
+            }
 
-        // SmartDashboard.putNumber("Pose Estimator ", this.getPose().getRotation().getDegrees());
-        // SmartDashboard.putNumber("Get Yaw ", this.getPigeon2().getYaw().getValueAsDouble());
+        } catch (Exception e) {
+            DriverStation.reportError("LIMELIGHT FAIL: RESTART ROBOT CODE", e.getStackTrace());
+            SmartDashboard.putBoolean("Limelight Status", false);
+        }
+
+        SmartDashboard.putNumber("PoseEstimator X", PoseEstimator.getEstimatedPosition().getX());
+        SmartDashboard.putNumber("PoseEstimator Y", PoseEstimator.getEstimatedPosition().getY());
+        SmartDashboard.putNumber("PoseEstimator ROT", PoseEstimator.getEstimatedPosition().getRotation().getDegrees());
+
+        fieldTypePub.set("Field2d");
+        fieldPub.set(new double[] {
+            PoseEstimator.getEstimatedPosition().getX(),
+            PoseEstimator.getEstimatedPosition().getY(),
+            PoseEstimator.getEstimatedPosition().getRotation().getDegrees()
+        });
+
+        SmartDashboard.putNumber("Pose Estimator ", this.getPose().getRotation().getDegrees());
+        SmartDashboard.putNumber("Get Yaw ", this.getPigeon2().getYaw().getValueAsDouble());
 
     }
 }

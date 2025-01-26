@@ -21,11 +21,15 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.AbsoluteRotation;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.LaserCAN;
 
 public class RobotContainer {
   private final SendableChooser<Command> autoChooser;
   private double MaxSpeed = Constants.MaxSpeed;
   private double MaxAngularRate = Constants.MaxAngularSpeed;
+
+  // additional subsystems
+  private final LaserCAN m_LaserCAN = new LaserCAN();
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController joystick = new CommandXboxController(0); // My joystick

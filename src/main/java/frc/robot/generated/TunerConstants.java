@@ -6,11 +6,13 @@ import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrainConstants;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstantsFactory;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule.ClosedLoopOutputType;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModuleConstants.SteerFeedbackType;
 
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
@@ -103,7 +105,7 @@ public class TunerConstants {
             .withDriveInertia(kDriveInertia)
             .withSteerFrictionVoltage(kSteerFrictionVoltage)
             .withDriveFrictionVoltage(kDriveFrictionVoltage)
-            .withFeedbackSource(SteerFeedbackType.FusedCANcoder)
+            .withFeedbackSource(SteerFeedbackType.RemoteCANcoder)
             .withCouplingGearRatio(kCoupleRatio)
             .withSteerMotorInverted(kSteerMotorReversed)
             .withDriveMotorInitialConfigs(driveInitialConfigs)
@@ -156,6 +158,20 @@ public class TunerConstants {
             kBackLeftSteerMotorId, kBackLeftDriveMotorId, kBackLeftEncoderId, kBackLeftEncoderOffset, Units.inchesToMeters(kBackLeftXPosInches), Units.inchesToMeters(kBackLeftYPosInches), kInvertLeftSide);
     private static final SwerveModuleConstants BackRight = ConstantCreator.createModuleConstants(
             kBackRightSteerMotorId, kBackRightDriveMotorId, kBackRightEncoderId, kBackRightEncoderOffset, Units.inchesToMeters(kBackRightXPosInches), Units.inchesToMeters(kBackRightYPosInches), kInvertRightSide);
+
+    private static final SwerveModule[] mSwerveModules = new SwerveModule[] {
+        new SwerveModule(FrontLeft, kCANbusName),
+        new SwerveModule(FrontRight, kCANbusName),
+        new SwerveModule(BackLeft, kCANbusName),
+        new SwerveModule(BackRight, kCANbusName)
+    };
+
+    public static final SwerveModulePosition[] mSwerveModulePositions = new SwerveModulePosition[] {
+        mSwerveModules[0].getPosition(false),
+        mSwerveModules[1].getPosition(false),
+        mSwerveModules[2].getPosition(false),
+        mSwerveModules[3].getPosition(false)
+    };
 
     public static final CommandSwerveDrivetrain DriveTrain = new CommandSwerveDrivetrain(DrivetrainConstants, FrontLeft,
             FrontRight, BackLeft, BackRight);
