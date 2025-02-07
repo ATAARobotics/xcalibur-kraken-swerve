@@ -69,11 +69,11 @@ public class AbsoluteRotation extends SubsystemBase{
         // rotSpeed = MathUtil.clamp(controller.calculate(robAngle), Constants.lowBound, Constants.MaxAngularSpeed);
         rotSpeed = controller.calculate(robAngle);
 
-        if(Math.sqrt(joyRightY.getAsDouble()*joyRightY.getAsDouble() + joyRightX.getAsDouble()*joyRightX.getAsDouble())<0.2) {
-            rotSpeed=0;
+        if(Math.sqrt(joyRightY.getAsDouble() * joyRightY.getAsDouble() + joyRightX.getAsDouble() * joyRightX.getAsDouble()) < 0.2) {
+            rotSpeed = 0;
         }
 
-        // System.out.println(rotSpeed);
+        System.out.println(rotSpeed);
 
     }
 

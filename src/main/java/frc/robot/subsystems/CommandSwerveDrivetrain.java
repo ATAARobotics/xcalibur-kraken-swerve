@@ -23,9 +23,13 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.networktables.DoubleArrayPublisher;
+import edu.wpi.first.networktables.DoubleSubscriber;
+import edu.wpi.first.networktables.DoubleTopic;
 import edu.wpi.first.networktables.NetworkTable;
+import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StringPublisher;
+import edu.wpi.first.networktables.TimestampedDouble;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Notifier;
@@ -59,7 +63,12 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
 
     private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
 
+    private DoubleTopic dblTopic;
+    private DoubleSubscriber dblSub;
+
     private final NetworkTable table = inst.getTable("Pose");
+    private final NetworkTable topicTable = inst.getTable("POSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSs");
+
     private final DoubleArrayPublisher fieldPub = table.getDoubleArrayTopic("robotPose").publish();
     private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
 
@@ -77,6 +86,10 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             TunerConstants.mSwerveModulePositions,
             new Pose2d(new Translation2d(0, 0), new Rotation2d(0))
         );
+
+        dblTopic = topicTable.getDoubleTopic("POSSSSSX");
+        dblSub = dblTopic.subscribe(0.0);
+
     }
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
@@ -92,6 +105,10 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             TunerConstants.mSwerveModulePositions,
             new Pose2d(new Translation2d(0, 0), new Rotation2d(0))
         );
+
+        dblTopic = topicTable.getDoubleTopic("POSSSSSX");
+        dblSub = dblTopic.subscribe(0.0);
+
 
     }
 
@@ -199,6 +216,10 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             SmartDashboard.putBoolean("Limelight Status", true);
             Pose2d visionBotPose = new Pose2d(poseX, poseY, poseR);
 
+            TimestampedDouble latency =  dblSub.getAtomic();
+
+            double latencyDouble = (double) latency.serverTime / 1000000;
+
             // distance from current pose to vision estimated pose
             // double poseDifference = this.getPose().getTranslation().getDistance(visionBotPose.getTranslation());
 
@@ -232,7 +253,12 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
                 //         // , VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds))
                 //         );
                 PoseEstimator.update(this.getPigeon2().getRotation2d(), TunerConstants.mSwerveModulePositions);
-                PoseEstimator.addVisionMeasurement(visionBotPose, Timer.getFPGATimestamp());
+                PoseEstimator.addVisionMeasurement(visionBotPose, latencyDouble);
+
+                SmartDashboard.putNumber("Latency thing", latencyDouble);
+                SmartDashboard.putNumber("RIO Latency thing", Timer.getFPGATimestamp());
+                SmartDashboard.putNumber("Difference in Latency thing", latencyDouble - Timer.getFPGATimestamp());
+
                 
             }
 
