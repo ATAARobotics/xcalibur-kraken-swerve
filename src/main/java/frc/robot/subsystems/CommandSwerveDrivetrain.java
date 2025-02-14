@@ -143,7 +143,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     public Pose2d getPose() {
-        return this.PoseEstimator.getEstimatedPosition();
+        return this.getPose();
     }
 
     public SwerveDrivePoseEstimator getPoseEstimator() {
@@ -206,80 +206,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
                 hasAppliedOperatorPerspective = true;
             });
         }
-
-        try {
-            NetworkTable pose = NetworkTableInstance.getDefault().getTable("POSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSs");
-            double poseX = pose.getEntry("POSSSSSX").getDouble(0);
-            double poseY = pose.getEntry("POSSSSSY").getDouble(0);
-            Rotation2d poseR = Rotation2d.fromRadians(pose.getEntry("ROTTTTTY").getDouble(0));
-            double timeStamp = pose.getEntry("LATENSEEEEE").getDouble(0) / (1000000000); // one bil nano -> sec
-            SmartDashboard.putBoolean("Limelight Status", true);
-            Pose2d visionBotPose = new Pose2d(poseX, poseY, poseR);
-
-            TimestampedDouble latency =  dblSub.getAtomic();
-
-            double latencyDouble = (double) latency.serverTime / 1000000;
-
-            // distance from current pose to vision estimated pose
-            // double poseDifference = this.getPose().getTranslation().getDistance(visionBotPose.getTranslation());
-
-            if (Math.abs(poseX) >= 0.001) {
-                // double xyStds;
-                // double degStds;
-                // multiple targets detected
-                // if (pose.getEntry() >= 2) {
-                //     if (!DriverStation.isEnabled()) {
-                //         this.getPigeon2().setYaw(poseR.getDegrees());
-                //     }
-                //     xyStds = 0.5;
-                //     degStds = 6;
-                // }
-                // // 1 target with large area and close to estimated pose
-                // else if (pose[9] > 0.8 && poseDifference < 0.5) {
-                //     xyStds = 1.0;
-                //     degStds = 12;
-                // }
-                // // 1 target farther away and estimated pose is close
-                // else if (pose[9] > 0.1 && poseDifference < 0.3) {
-                //     xyStds = 2.0;
-                //     degStds = 30;
-                // }
-                // // conditions don't match to add a vision measurement
-                // else {
-                //     return;
-                // }
-
-                // this.addVisionMeasurement(visionBotPose, timeStamp
-                //         // , VecBuilder.fill(xyStds, xyStds, Units.degreesToRadians(degStds))
-                //         );
-                PoseEstimator.update(this.getPigeon2().getRotation2d(), TunerConstants.mSwerveModulePositions);
-                PoseEstimator.addVisionMeasurement(visionBotPose, latencyDouble);
-
-                SmartDashboard.putNumber("Latency thing", latencyDouble);
-                SmartDashboard.putNumber("RIO Latency thing", Timer.getFPGATimestamp());
-                SmartDashboard.putNumber("Difference in Latency thing", latencyDouble - Timer.getFPGATimestamp());
-
-                
-            }
-
-        } catch (Exception e) {
-            DriverStation.reportError("LIMELIGHT FAIL: RESTART ROBOT CODE", e.getStackTrace());
-            SmartDashboard.putBoolean("Limelight Status", false);
-        }
-
-        SmartDashboard.putNumber("PoseEstimator X", PoseEstimator.getEstimatedPosition().getX());
-        SmartDashboard.putNumber("PoseEstimator Y", PoseEstimator.getEstimatedPosition().getY());
-        SmartDashboard.putNumber("PoseEstimator ROT", PoseEstimator.getEstimatedPosition().getRotation().getDegrees());
-
-        fieldTypePub.set("Field2d");
-        fieldPub.set(new double[] {
-            PoseEstimator.getEstimatedPosition().getX(),
-            PoseEstimator.getEstimatedPosition().getY(),
-            PoseEstimator.getEstimatedPosition().getRotation().getDegrees()
-        });
-
-        SmartDashboard.putNumber("Pose Estimator ", this.getPose().getRotation().getDegrees());
-        SmartDashboard.putNumber("Get Yaw ", this.getPigeon2().getYaw().getValueAsDouble());
 
     }
 }

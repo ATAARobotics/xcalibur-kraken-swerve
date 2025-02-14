@@ -21,15 +21,12 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.AbsoluteRotation;
-import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 
 public class RobotContainer {
   private final SendableChooser<Command> autoChooser;
   private double MaxSpeed = Constants.MaxSpeed;
   private double MaxAngularRate = Constants.MaxAngularSpeed;
-
-  private static final ClimberSubsystem m_ClimberSubsystem = new ClimberSubsystem();
 
   /* Setting up bindings for necessary control of the swerve drive platform */
   private final CommandXboxController joystick = new CommandXboxController(0); // My joystick
@@ -62,10 +59,6 @@ public class RobotContainer {
 
     // reset the field-centric heading on left bumper press
     joystick.leftBumper().onTrue(drivetrain.runOnce(() -> drivetrain.seedFieldRelative()));
-
-    joystick.povUp().whileTrue(new InstantCommand(() -> m_ClimberSubsystem.runClimb())).onFalse(new InstantCommand(() -> m_ClimberSubsystem.stopClimb()));
-    joystick.povDown().whileTrue(new InstantCommand(() -> m_ClimberSubsystem.reverseClimb())).onFalse(new InstantCommand(() -> m_ClimberSubsystem.stopClimb()));
-
 
     if (Utils.isSimulation()) {
       drivetrain.seedFieldRelative(new Pose2d(new Translation2d(), Rotation2d.fromDegrees(90)));
