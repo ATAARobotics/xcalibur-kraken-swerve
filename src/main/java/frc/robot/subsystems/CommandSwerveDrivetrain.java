@@ -58,19 +58,8 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean hasAppliedOperatorPerspective = false;
 
-    private SwerveDrivePoseEstimator PoseEstimator;
 
 
-    private final NetworkTableInstance inst = NetworkTableInstance.getDefault();
-
-    private DoubleTopic dblTopic;
-    private DoubleSubscriber dblSub;
-
-    private final NetworkTable table = inst.getTable("Pose");
-    private final NetworkTable topicTable = inst.getTable("POSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSs");
-
-    private final DoubleArrayPublisher fieldPub = table.getDoubleArrayTopic("robotPose").publish();
-    private final StringPublisher fieldTypePub = table.getStringTopic(".type").publish();
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, double OdometryUpdateFrequency,
             SwerveModuleConstants... modules) {
@@ -80,16 +69,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
         }
         setPathPlanner();
 
-        PoseEstimator = new SwerveDrivePoseEstimator(
-            Constants.swerveKinematics,
-            this.getPigeon2().getRotation2d(),
-            TunerConstants.mSwerveModulePositions,
-            new Pose2d(new Translation2d(0, 0), new Rotation2d(0))
-        );
-
-        dblTopic = topicTable.getDoubleTopic("POSSSSSX");
-        dblSub = dblTopic.subscribe(0.0);
-
     }
 
     public CommandSwerveDrivetrain(SwerveDrivetrainConstants driveTrainConstants, SwerveModuleConstants... modules) {
@@ -98,16 +77,6 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
             startSimThread();
         }
         setPathPlanner();
-
-        PoseEstimator = new SwerveDrivePoseEstimator(
-            Constants.swerveKinematics,
-            this.getPigeon2().getRotation2d(),
-            TunerConstants.mSwerveModulePositions,
-            new Pose2d(new Translation2d(0, 0), new Rotation2d(0))
-        );
-
-        dblTopic = topicTable.getDoubleTopic("POSSSSSX");
-        dblSub = dblTopic.subscribe(0.0);
 
 
     }
@@ -143,11 +112,7 @@ public class CommandSwerveDrivetrain extends SwerveDrivetrain implements Subsyst
     }
 
     public Pose2d getPose() {
-        return this.getPose();
-    }
-
-    public SwerveDrivePoseEstimator getPoseEstimator() {
-        return PoseEstimator;
+        return this.getState().Pose;
     }
 
     private ChassisSpeeds getSpeeds() {
